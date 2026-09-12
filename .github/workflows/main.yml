@@ -1,0 +1,103 @@
+name: RDP
+
+on:
+
+workflow_dispatch:
+
+jobs:
+
+secure-rdp:
+
+runs-on: windows latest
+
+timeout-minutes: 3600
+
+steps:
+
+name: Configure Core RDP Settings.
+
+run:
+
+Q
+
+needed)
+
+#Enable Remote Desktop and disable Network Level Authentication (if Set-ItemProperty Path 'HKLM:\System\CurrentControlSet\Control\Terminal
+
+Server
+
+-Name "fDenyTSConnections" Value -Force
+
+Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal
+
+Server\WinStations\RDP-Tcp
+
+-Name "UserAuthentication" -Value @ -Force
+
+Set-ItemProperty Path 'HKLM:\System\CurrentControlSet\Control\Terminal
+
+Server\WinStations\RDP-Tcp
+
+-Name "SecurityLayer" -Value -Force
+
+#Remove any existing rule with the same name to avoid duplication netsh advfirewall firewall delete rule name="RDP-Tailscale"
+
+#For testing, allow any incoming connection on port 3389 netsh advfirewall firewall add rule name="RDP-Tailscale"
+
+dir=in action=allow protocol=TCP localport=3389
+
+effect
+
+Restart-Service Name TermService -Force
+
+#(Optional) Restart the Remote Desktop service to ensure changes take
+
+name: Create RDP User with Secure Password
+
+Add-Type-AssemblyName System.Security
+
+$charSet @{
+
+#A-Z
+
+Upper [char[]] (65..90)
+
+#a-z
+
+Number
+
+[char[]] (48..57)
+
+Lower = [char[]] (97..122)
+
+#0-9
+
+Special ([char[]] (33..47) [char[]] (58..64) +
+
+characters
+
+run:
+
+[char[]] (91..96) + [char[]] (123..126)) # Special
+
+} $rawPassword = ()
+
+$rawPassword += $charSet. Upper Get-Random Count 4
+
+$rawPassword += $charSet. Lower Get-Random Count 4
+
+$rawPassword += $charset. Number Get-Random Count 4
+
+$rawPassword + $charset. Special | Get-Random Count 4
+
+$password join (SrawPassword Sort-Object { Get-Random))
+
+$
+
+securePass ConvertTo-SecureString $password -AsPlainText -Force
+
+New-LocalUser Name "RDP" -Password $securePass -AccountNeverExpires Add-LocalGroupMember -Group "Administrators" Member "RDP"
+
+Add-LocalGroupMember -Group "Remote Desktop Users" Member "RDP"
+
+echo "RDP_CREDS=User: RDP Password: $password" >> $env: GITHUB_ENV
